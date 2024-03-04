@@ -47,8 +47,9 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.app10days.model.DeutschlandMotor
+import coil.compose.AsyncImage
 import com.example.app10days.dataSource.DeutschlandMotorRepository
+import com.example.app10days.model.DeutschlandMotor
 import com.example.app10days.ui.theme.App10daysTheme
 
 @Composable
@@ -80,7 +81,7 @@ fun CheckboxItem(label: String, selected: Boolean, onCheckedChange: (Boolean) ->
 }
 
 @Composable
-fun MarcaVehiculo(marca: Int, modelo: Int, modifier: Modifier = Modifier) {
+fun MarcaVehiculo(vehiculo: DeutschlandMotor, modifier: Modifier = Modifier) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
@@ -89,12 +90,12 @@ fun MarcaVehiculo(marca: Int, modelo: Int, modifier: Modifier = Modifier) {
             .background(color = MaterialTheme.colorScheme.primary)
     ) {
         Text(
-            text = stringResource(marca),
+            text = vehiculo.marca,
             style = MaterialTheme.typography.displayMedium,
             modifier = Modifier.padding(dimensionResource(R.dimen.padding_small))
         )
         Text(
-            text = stringResource(modelo),
+            text = vehiculo.modelo,
             style = MaterialTheme.typography.displayMedium,
             modifier = Modifier.padding(dimensionResource(R.dimen.padding_small))
         )
@@ -102,16 +103,15 @@ fun MarcaVehiculo(marca: Int, modelo: Int, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun Image(image: Int, expanded: Boolean, modifier: Modifier = Modifier) {
+fun Image(vehiculo: DeutschlandMotor, expanded: Boolean, modifier: Modifier = Modifier) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
         modifier = modifier
             .background(color = MaterialTheme.colorScheme.primary)
     ) {
-        Image(
-
-            painter = painterResource(image),
+        AsyncImage(
+            model = vehiculo.imagen,
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
@@ -132,7 +132,7 @@ fun Image(image: Int, expanded: Boolean, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun Information(info: Int, modifier: Modifier = Modifier) {
+fun Information(vehiculo: DeutschlandMotor, modifier: Modifier = Modifier) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
@@ -140,11 +140,18 @@ fun Information(info: Int, modifier: Modifier = Modifier) {
             .fillMaxWidth()
             .background(color = MaterialTheme.colorScheme.onPrimary)
     ) {
-        Text(
-            text = stringResource(info),
-            style = MaterialTheme.typography.displaySmall,
-            modifier = Modifier.padding(dimensionResource(R.dimen.padding_small))
-        )
+        Column {
+            Text(
+                text = stringResource(R.string.potencia, vehiculo.potencia, R.string.cv),
+                style = MaterialTheme.typography.displaySmall,
+                modifier = Modifier.padding(dimensionResource(R.dimen.padding_small))
+            )
+            Text(
+                text = stringResource(R.string.precio, vehiculo.precio, R.string.euro),
+                style = MaterialTheme.typography.displaySmall,
+                modifier = Modifier.padding(dimensionResource(R.dimen.padding_small))
+            )
+        }
     }
 }
 
@@ -195,13 +202,13 @@ fun Vehiculo(vehiculo: DeutschlandMotor, modifier: Modifier = Modifier) {
                     )
                 )
         ) {
-            MarcaVehiculo(vehiculo.marca, vehiculo.modelo)
-            Image(vehiculo.image, expanded)
+            MarcaVehiculo(vehiculo)
+            Image(vehiculo, expanded)
             ItemButton(expanded = expanded, onClick = { expanded = !expanded })
         }
         if (expanded) {
-            Information(vehiculo.potencia)
-            Information(vehiculo.precio)
+            Information(vehiculo)
+            //Information(vehiculo)
         }
     }
 }
@@ -240,10 +247,12 @@ fun MostrarVehiculos(
 
 @Composable
 private fun TodosLosAudis(it: PaddingValues) {
-    val repository = DeutschlandMotorRepository()
-    val vehiculos = repository.getVehiculos()
+    var listaVehiculos by remember { mutableStateOf(listOf<DeutschlandMotor>()) }
+    val stringAUDI: String = stringResource(R.string.audi)
+
     LazyColumn(contentPadding = it) {
-        items(vehiculos.filter { it.marca == R.string.audi }) {
+        DeutschlandMotorRepository().getVehiculos { listaVehiculos = it }
+        items(listaVehiculos.filter { it.marca == stringAUDI }) {
             Vehiculo(
                 vehiculo = it,
                 modifier = Modifier.padding(dimensionResource(R.dimen.padding_small))
@@ -254,10 +263,12 @@ private fun TodosLosAudis(it: PaddingValues) {
 
 @Composable
 private fun TodosLosBMWS(it: PaddingValues) {
-    val repository = DeutschlandMotorRepository()
-    val vehiculos = repository.getVehiculos()
+    var listaVehiculos by remember { mutableStateOf(listOf<DeutschlandMotor>()) }
+    val stringBMW: String = stringResource(R.string.bmw)
+
     LazyColumn(contentPadding = it) {
-        items(vehiculos.filter { it.marca == R.string.bmw }) {
+        DeutschlandMotorRepository().getVehiculos { listaVehiculos = it }
+        items(listaVehiculos.filter { it.marca == stringBMW }) {
             Vehiculo(
                 vehiculo = it,
                 modifier = Modifier.padding(dimensionResource(R.dimen.padding_small))
@@ -268,10 +279,11 @@ private fun TodosLosBMWS(it: PaddingValues) {
 
 @Composable
 private fun TodosLosVehiculos(it: PaddingValues) {
-    val repository = DeutschlandMotorRepository()
-    val vehiculos = repository.getVehiculos()
+    var listaVehiculos by remember { mutableStateOf(listOf<DeutschlandMotor>()) }
+
     LazyColumn(contentPadding = it) {
-        items(vehiculos) {
+        DeutschlandMotorRepository().getVehiculos { listaVehiculos = it }
+        items(listaVehiculos) {
             Vehiculo(
                 vehiculo = it,
                 modifier = Modifier.padding(dimensionResource(R.dimen.padding_small))
